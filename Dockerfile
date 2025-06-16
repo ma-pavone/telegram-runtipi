@@ -21,12 +21,17 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+# Copia as dependências instaladas do builder
+COPY --from=builder /root/.local /root/.local
+
+# Copia o código fonte
 COPY src/ ./src/
 
 # Variáveis de ambiente padrão
 ENV PYTHONPATH=/app/src
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV PATH=/root/.local/bin:$PATH
 
 # Health check endpoint (opcional)
 EXPOSE 7777
