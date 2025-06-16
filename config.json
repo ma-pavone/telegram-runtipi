@@ -1,0 +1,43 @@
+{
+  "$schema": "../app-info-schema.json",
+  "name": "Runtipi Control",
+  "available": true,
+  "exposable": true,
+  "dynamic_config": true,
+  "port": 7777,
+  "id": "runtipi-control",
+  "tipi_version": 50,
+  "version": "1.0.0",
+  "categories": ["utilities"],
+  "description": "Web interface to control Runtipi apps remotely",
+  "short_desc": "Control Runtipi apps via web interface",
+  "author": "ma-pavone",
+  "source": "https://github.com/runtipi/runtipi",
+  "form_fields": [
+    {
+      "type": "text",
+      "label": "Runtipi Host",
+      "env_variable": "RUNTIPI_HOST",
+      "default": "http://localhost:3000",
+      "required": true,
+      "hint": "URL completa do seu Runtipi"
+    },
+    {
+      "type": "text", 
+      "label": "Username",
+      "env_variable": "RUNTIPI_USERNAME",
+      "required": true,
+      "hint": "Seu usuário do Runtipi"
+    },
+    {
+      "type": "password",
+      "label": "Password", 
+      "env_variable": "RUNTIPI_PASSWORD",
+      "required": true,
+      "hint": "Sua senha do Runtipi"
+    }
+  ],
+  "supported_architectures": ["arm64", "amd64"],
+  "created_at": 1691943801422,
+  "updated_at": 1744412235000
+}

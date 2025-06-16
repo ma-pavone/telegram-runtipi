@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  telegram-bot:
+    build: .
+    container_name: telegram-bot
+    restart: unless-stopped
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - RUNTIPI_HOST=${RUNTIPI_HOST}
+      - RUNTIPI_USERNAME=${RUNTIPI_USERNAME}
+      - RUNTIPI_PASSWORD=${RUNTIPI_PASSWORD}
+    networks:
+      - runtipi_tipi_main_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+networks:
+  runtipi_tipi_main_network:
+    external: true
