@@ -20,6 +20,13 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+        labels: "service=telegram-bot"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:7777/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 networks:
   runtipi_tipi_main_network:
     external: true
