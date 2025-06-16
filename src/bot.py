@@ -251,7 +251,7 @@ jellyfin
 
             current_status = app_data['app']['status']
             action = "stop" if current_status == "running" else "start"
-            action_text = "parando" if action == "stop" else "iniciando"
+            action_text = "stopped" if action == "stop" else "started"
             
             await update.message.reply_text(f"⚡ {action_text.capitalize()} `{app_id}`...", parse_mode='Markdown')
             
@@ -261,7 +261,7 @@ jellyfin
             if success:
                 status_emoji = "🔴" if action == "stop" else "🟢"
                 await update.message.reply_text(
-                    f"{status_emoji} App `{app_id}` foi solicitado para {action_text}",
+                    f"{status_emoji} App `{app_id}` {action_text}",
                     parse_mode='Markdown'
                 )
             else:
