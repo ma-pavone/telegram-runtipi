@@ -1,7 +1,5 @@
-# src/runtipi_api.py
-
-import logging
 import requests
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +29,13 @@ class RuntipiAPI:
             )
             if response.status_code == 201:
                 self.authenticated = True
-                logger.info("Login realizado com sucesso")
+                logger.info("[API Runtipi] Login realizado com sucesso")
                 return True
             else:
-                logger.error(f"Erro no login: {response.status_code}")
+                logger.error(f"[API Runtipi] Erro no login: {response.status_code}")
                 return False
         except Exception as e:
-            logger.error(f"Erro na autenticação: {e}")
+            logger.error(f"[API Runtipi] Erro na autenticação: {e}")
             return False
 
     def get_installed_apps(self):
@@ -46,6 +44,8 @@ class RuntipiAPI:
         try:
             headers = {
                 'Accept': '*/*',
+                'Accept-Language': 'en,pt-BR;q=0.9,pt;q=0.8',
+                'Connection': 'keep-alive',
                 'Referer': f'{self.host}/apps',
                 'User-Agent': 'Mozilla/5.0'
             }
@@ -55,12 +55,13 @@ class RuntipiAPI:
                 timeout=10
             )
             if response.status_code == 200:
+                logger.info("[API Runtipi] Apps instalados obtidos com sucesso")
                 return response.json()
             else:
-                logger.error(f"Erro ao obter apps: {response.status_code}")
+                logger.error(f"[API Runtipi] Erro ao obter apps: {response.status_code}")
                 return None
         except Exception as e:
-            logger.error(f"Erro ao obter apps instalados: {e}")
+            logger.error(f"[API Runtipi] Erro ao obter apps instalados: {e}")
             return None
 
     def toggle_app(self, app_urn, action):
@@ -71,7 +72,7 @@ class RuntipiAPI:
             headers = {
                 'Accept': '*/*',
                 'Origin': self.host,
-                'Referer': f'{self.host}/apps/migrated/{app_urn.split(":")[0]}",
+                'Referer': f'{self.host}/apps/migrated/{app_urn.split(":")[0]}',
                 'User-Agent': 'Mozilla/5.0'
             }
             response = self.session.post(
@@ -80,11 +81,11 @@ class RuntipiAPI:
                 timeout=30
             )
             if response.status_code in [200, 201]:
-                logger.info(f"App {app_urn} {action} executado com sucesso")
+                logger.info(f"[API Runtipi] App {app_urn} {action} executado com sucesso")
                 return True
             else:
-                logger.error(f"Erro ao {action} app {app_urn}: {response.status_code}")
+                logger.error(f"[API Runtipi] Erro ao {action} app {app_urn}: {response.status_code}")
                 return False
         except Exception as e:
-            logger.error(f"Erro ao {action} app {app_urn}: {e}")
+            logger.error(f"[API Runtipi] Erro ao {action} app {app_urn}: {e}")
             return False

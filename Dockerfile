@@ -7,4 +7,4 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ ./src/
-CMD ["python", "src/telegram_runtipi.py"]
+CMD ["python", "src/app.py"]

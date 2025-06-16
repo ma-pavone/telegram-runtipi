@@ -1,66 +1,43 @@
-# Telegram Runtipi Controller 🤖
+# Telegram Bot para gerenciamento do Noteserver Runtipi
 
-Bot Telegram simples e funcional para monitorar e controlar os apps do seu servidor [Runtipi](https://github.com/runtipi/runtipi).
-
----
-
-## 📦 Funcionalidades
-
-- 🔍 Listar todos os apps instalados
-- 📊 Ver status dos apps (rodando ou parados)
-- 🟢🔴 Ligar/Desligar apps via comando `toggle`
-- 🔐 Restringe comandos ao chat ID autorizado
+Bot para controle e monitoramento de apps no Noteserver Runtipi via Telegram.
 
 ---
 
-## 🚀 Como Usar
+## Comandos Disponíveis
 
-### 1. Clonar o repositório
+- `/help`  
+  Mostra essa mensagem de ajuda.
 
-```bash
-git clone https://github.com/ma-pavone/telegram_runtipi.git
-cd telegram_runtipi
-2. Criar o .env
-Crie um arquivo .env com as seguintes variáveis:
+- `/status`  
+  Lista o status (rodando/parado) dos apps instalados no Runtipi usando seus nomes técnicos.
 
-env
-Copy
-Edit
-TELEGRAM_TOKEN=seu_token_aqui
-TELEGRAM_CHAT_ID=123456789
-RUNTIPI_HOST=http://192.168.x.x
-RUNTIPI_USERNAME=admin
-RUNTIPI_PASSWORD=suasenha
-⚠️ TELEGRAM_CHAT_ID pode ser obtido usando o bot em modo debug, logando o update.effective_chat.id
+- `/toggle <app_id>`  
+  Liga ou desliga o app especificado pelo ID técnico.
 
-3. Subir com Docker Compose
-bash
-Copy
-Edit
-docker compose up -d --build
-📡 Comandos Disponíveis no Bot
-Comando	Descrição
-/start	Mostra os comandos e boas-vindas
-/apps	Lista os apps instalados com status
-/status	Lista somente status de apps
-toggle <nome_app>	Liga ou desliga o app (ex: toggle jellyfin)
+- `/list`  
+  Lista os scripts disponíveis para execução no diretório configurado pela variável de ambiente `SCRIPTS_DIR`.
 
-🐳 Docker
-Dockerfile otimizado
-dockerfile
-Copy
-Edit
-FROM python:3.11.9-slim
+- `/run <script_name>`  
+  Executa o script informado, caso exista e seja executável.
 
-WORKDIR /app
+---
 
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-COPY requirements.txt . 
-RUN pip install --no-cache-dir -r requirements.txt
+## Variáveis de Ambiente
 
-COPY src/ ./src/
-CMD ["python", "src/telegram_runtipi.py"]
-🔐 Segurança
-As credenciais do Runtipi são carregadas por variável de ambiente (.env)
+- `TELEGRAM_BOT_TOKEN` — Token do bot Telegram.
+- `RUNTIPI_API_URL` — URL da API do Runtipi.
+- `RUNTIPI_API_TOKEN` — Token de autenticação da API Runtipi.
+- `SCRIPTS_DIR` — Caminho absoluto do diretório que contém os scripts que podem ser listados e executados pelo bot.
 
-O acesso é restrito por TELEGRAM_CHAT_ID
+---
+
+## Docker
+
+- Certifique-se de que o arquivo `.env` esteja na raiz, contendo as variáveis acima.
+- No `docker-compose.yml`, utilize:
+  ```yaml
+  env_file:
+    - .env
+  volumes:
+    - ${SCRIPTS_DIR}:${SCRIPTS_DIR}:ro

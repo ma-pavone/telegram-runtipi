@@ -11,6 +11,8 @@ services:
       - RUNTIPI_HOST=${RUNTIPI_HOST}
       - RUNTIPI_USERNAME=${RUNTIPI_USERNAME}
       - RUNTIPI_PASSWORD=${RUNTIPI_PASSWORD}
+    volumes:
+      - "${SCRIPTS_PATH}:/scripts"
     networks:
       - runtipi_tipi_main_network
     logging:

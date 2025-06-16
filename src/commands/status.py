@@ -8,12 +8,19 @@ logger = logging.getLogger(__name__)
 
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE, api):
     await update.message.reply_text("🔄 Verificando status dos apps...")
-    logger.info("[API Runtipi] Requisição para status dos apps iniciada")
+    logger.info("[status_command] Iniciando requisição para /api/apps/installed")
 
-    apps_data = api.get_installed_apps()
+    try:
+        apps_data = api.get_installed_apps()
+        logger.debug(f"[status_command] Resposta recebida: {apps_data}")
+    except Exception as e:
+        logger.error(f"[status_command] Erro ao conectar à API do Runtipi: {e}")
+        await update.message.reply_text("❌ Erro ao conectar à API do Runtipi")
+        return
+
     if not apps_data or 'installed' not in apps_data:
         await update.message.reply_text("❌ Erro ao obter status dos apps")
-        logger.error("[API Runtipi] Erro ao obter status dos apps: resposta malformada ou vazia")
+        logger.error("[status_command] Estrutura da resposta inválida ou vazia")
         return
 
     running = []
@@ -35,9 +42,9 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE, api
 
     if stopped:
         message += "*🔴 Parados:*\n" + "\n".join(stopped)
-
+        
     if not running and not stopped:
         message += "Nenhum app encontrado"
 
     await update.message.reply_text(message, parse_mode='Markdown')
-    logger.info("[API Runtipi] Status dos apps listado com sucesso")
+    logger.info("[status_command] Listagem de status concluída com sucesso")
