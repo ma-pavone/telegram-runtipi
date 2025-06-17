@@ -1,4 +1,4 @@
-FROM python:3.11.9-slim as builder
+FROM python:3.11.9-slim AS builder
 
 RUN apt-get update && apt-get install -y \
     gcc \
@@ -32,9 +32,6 @@ ENV PYTHONPATH=/app/src
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PATH=/root/.local/bin:$PATH
-
-# Health check endpoint (opcional)
-EXPOSE 7777
 
 # Comando padrão
 CMD ["python", "src/app.py"]

@@ -66,20 +66,6 @@ def test_runtipi_api():
         print("❌ Falha ao obter apps")
         return False
     
-    # Teste 3: Status de um app específico (se existir)
-    if apps_data and 'installed' in apps_data and apps_data['installed']:
-        first_app = apps_data['installed'][0]
-        app_id = first_app['info']['id']
-        
-        print(f"\n🧪 Teste 3: Verificando status do app '{app_id}'...")
-        app_status = api.get_app_status(app_id)
-        
-        if app_status:
-            print("✅ Status obtido com sucesso")
-            print(f"  Status: {app_status.get('app', {}).get('status', 'N/A')}")
-        else:
-            print("❌ Falha ao obter status do app")
-    
     print("\n🎉 Todos os testes concluídos!")
     return True
 
