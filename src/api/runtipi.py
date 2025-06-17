@@ -82,6 +82,7 @@ class RuntipiAPI:
         return self._make_request("GET", "/apps/installed")
     
     def get_app_status(self, app_name: str) -> Optional[str]:
+        """Retorna apenas o status do app como string"""
         data = self.get_installed_apps()
         if not isinstance(data, dict) or 'installed' not in data:
             logger.error("Resposta inválida de get_installed_apps")
@@ -95,6 +96,23 @@ class RuntipiAPI:
             if isinstance(info, dict) and isinstance(app_data, dict):
                 if info.get('id') == app_name:
                     return app_data.get('status')
+        return None
+    
+    def get_app_data(self, app_name: str) -> Optional[Dict[str, Any]]:
+        """Retorna o objeto completo do app"""
+        data = self.get_installed_apps()
+        if not isinstance(data, dict) or 'installed' not in data:
+            logger.error("Resposta inválida de get_installed_apps")
+            return None
+        
+        for app in data['installed']:
+            if not isinstance(app, dict):
+                continue
+            info = app.get('info')
+            app_data = app.get('app')
+            if isinstance(info, dict) and isinstance(app_data, dict):
+                if info.get('id') == app_name:
+                    return app  # Retorna o objeto completo
         return None
     
     def get_all_apps_status(self) -> Optional[Dict[str, str]]:

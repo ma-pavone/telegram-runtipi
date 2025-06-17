@@ -74,16 +74,16 @@ class AppsHandlers:
             
             try:
                 # Verifica se o app existe e obtém status atual
-                app_data = await asyncio.to_thread(self.api.get_app_status, app_id)
+                current_status = await asyncio.to_thread(self.api.get_app_status, app_id)
                 
-                if not app_data:
+                if not current_status:
                     await update.message.reply_text(
                         f"❌ App `{app_id}` não encontrado", 
                         parse_mode='Markdown'
                     )
                     return
 
-                current_status = app_data['app']['status']
+                # Determina a ação baseada no status atual
                 action = "stop" if current_status == "running" else "start"
                 action_text = "parado" if action == "stop" else "iniciado"
                 
