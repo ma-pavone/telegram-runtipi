@@ -10,9 +10,20 @@ services:
       - RUNTIPI_USERNAME=${RUNTIPI_USERNAME}
       - RUNTIPI_PASSWORD=${RUNTIPI_PASSWORD}
     volumes:
-      - "${SCRIPTS_PATH}:/scripts"
+      - "${SCRIPTS_PATH}:/scripts:ro"  # Read-only para segurança
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"  # Docker socket (read-only)
     networks:
       - runtipi_tipi_main_network
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     logging:
       driver: "json-file"
       options:

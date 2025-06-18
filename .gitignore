@@ -1,5 +1,26 @@
-# Environment
-.env
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.log
+
+# Ambientes
+.env
+.env.*
+.venv/
+*.sqlite3
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Outros
+*.bak
