@@ -1,7 +1,7 @@
 services:
-  telegram-bot:
+  telegram-runtipi:
     build: .
-    container_name: telegram-bot
+    container_name: telegram-runtipi
     restart: unless-stopped
     environment:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
@@ -10,10 +10,12 @@ services:
       - RUNTIPI_USERNAME=${RUNTIPI_USERNAME}
       - RUNTIPI_PASSWORD=${RUNTIPI_PASSWORD}
     volumes:
-      - "${SCRIPTS_PATH}:/scripts:ro"  # Read-only para segurança
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"  # Docker socket (read-only)
+      - ${SCRIPTS_PATH}:/scripts:ro  # Read-only para segurança
+      - ${HOME}/runtipi/logs:/app/logs
     networks:
       - runtipi_tipi_main_network
+    ports:
+      - "7777:7777"
     security_opt:
       - no-new-privileges:true
     deploy:
@@ -29,7 +31,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-        labels: "service=telegram-bot"
+        labels: "service=telegram-runtipi"
 networks:
   runtipi_tipi_main_network:
     external: true

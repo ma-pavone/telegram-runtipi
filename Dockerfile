@@ -1,48 +1,48 @@
-# Etapa de build (instalação de dependências)
-FROM python:3.11.9-slim AS builder
+# Dockerfile
+FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y build-essential \
-    && apt-get purge -y --auto-remove \
-    && rm -rf /var/lib/apt/lists/*
+# Argumentos de build
+ARG BUILD_DATE
+ARG VERSION="1.0.0"
 
+# Labels para metadados
+LABEL maintainer="seu-email@exemplo.com" \
+      description="Bot Telegram para controle do Runtipi" \
+      version="${VERSION}" \
+      build_date="${BUILD_DATE}"
 
-WORKDIR /install
-
-COPY requirements.txt .
-RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
-
-# Etapa final (execução)
-FROM python:3.11.9-slim
-
-LABEL maintainer="ma-pavone"
-LABEL description="Telegram Bot para controle do Runtipi"
-LABEL version="2.1.0"
-
-WORKDIR /app
+# Variáveis de ambiente
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 RUN apt-get update && apt-get install -y \
     curl \
     bash \
-    docker.io \
-    procps \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-RUN adduser --disabled-password --gecos '' --uid 1000 appuser
+RUN groupadd -r botuser && useradd -r -g botuser botuser
 
-# Copia pacotes Python da build
-COPY --from=builder /install /usr/local
+RUN mkdir -p /app /scripts /app/logs && \
+    chown -R botuser:botuser /app /scripts
 
-# Copia o código-fonte
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
 COPY src/ ./src/
 
-# Permissões
-RUN chown -R 1000:1000 /app
-USER appuser
+RUN chown -R botuser:botuser /app
 
-# Variáveis de ambiente
-ENV PYTHONPATH=/app/src
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+USER botuser
 
-CMD ["python", "src/app.py"]
+EXPOSE 7777
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:7777/health || exit 1
+
+CMD ["python", "-m", "src.app"]

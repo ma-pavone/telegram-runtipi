@@ -2,8 +2,8 @@
 
 # Variáveis
 COMPOSE_FILE = docker-compose.yml
-CONTAINER_NAME = runtipi-telegram-bot
-IMAGE_NAME = runtipi-telegram-bot
+CONTAINER_NAME = runtipi-telegram-runtipi
+IMAGE_NAME = runtipi-telegram-runtipi
 
 # Comando padrão
 help: ## Mostra esta mensagem de ajuda
