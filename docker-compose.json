@@ -1,0 +1,40 @@
+{
+  "services": [
+    {
+      "name": "telegram-runtipi",
+      "isMain": true,
+      "image": "SEU_USUARIO_DOCKERHUB/telegram-runtipi-bot:latest",
+      "internalPort": 7777,
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "restart": "unless-stopped",
+      "networks": [
+        "runtipi_tipi_main_network"
+      ],
+      "volumes": [
+        {
+          "hostPath": "${SCRIPTS_PATH}",
+          "containerPath": "/scripts",
+          "readOnly": true
+        },
+        {
+          "hostPath": "${APP_DATA_DIR}/logs",
+          "containerPath": "/app/logs"
+        }
+      ],
+      "deploy": {
+        "resources": {
+          "limits": {
+            "cpus": "0.5",
+            "memory": "256M"
+          },
+          "reservations": {
+            "cpus": "0.1",
+            "memory": "64M"
+          }
+        }
+      }
+    }
+  ]
+}

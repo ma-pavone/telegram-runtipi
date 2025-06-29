@@ -1,43 +1,73 @@
 {
-  "$schema": "../app-info-schema.json",
-  "name": "Runtipi Control",
+  "name": "Telegram Runtipi",
   "available": true,
   "exposable": true,
-  "dynamic_config": true,
   "port": 7777,
-  "id": "runtipi-control",
-  "tipi_version": 50,
+  "id": "telegram-runtipi",
+  "tipi_version": 5,
   "version": "1.0.0",
-  "categories": ["utilities"],
-  "description": "Web interface to control Runtipi apps remotely",
-  "short_desc": "Control Runtipi apps via web interface",
+  "categories": [
+    "utilities",
+    "automation"
+  ],
+  "description": "Um bot para controle e monitoramento de aplicativos no seu servidor Runtipi através do Telegram. Permite listar, iniciar/parar aplicativos e executar scripts remotamente.",
+  "short_desc": "Controle seu Runtipi via Telegram.",
   "author": "ma-pavone",
-  "source": "https://github.com/runtipi/runtipi",
+  "source": "https://github.com/ma-pavone/telegram-runtipi",
   "form_fields": [
     {
-      "type": "text",
-      "label": "Runtipi Host",
-      "env_variable": "RUNTIPI_HOST",
-      "default": "http://localhost:3000",
+      "type": "password",
+      "label": "Telegram Bot Token",
+      "name": "TELEGRAM_TOKEN",
+      "env_variable": "TELEGRAM_TOKEN",
       "required": true,
-      "hint": "URL completa do seu Runtipi"
+      "hint": "Token do seu bot gerado pelo @BotFather."
     },
     {
-      "type": "text", 
-      "label": "Username",
+      "type": "text",
+      "label": "Telegram Chat ID",
+      "name": "TELEGRAM_CHAT_ID",
+      "env_variable": "TELEGRAM_CHAT_ID",
+      "required": true,
+      "hint": "O ID do seu chat/usuário do Telegram para autorização."
+    },
+    {
+      "type": "text",
+      "label": "Runtipi Host URL",
+      "name": "RUNTIPI_HOST",
+      "env_variable": "RUNTIPI_HOST",
+      "required": true,
+      "default": "http://192.168.15.3:80",
+      "hint": "URL de acesso ao seu Runtipi na rede local."
+    },
+    {
+      "type": "text",
+      "label": "Runtipi Username",
+      "name": "RUNTIPI_USERNAME",
       "env_variable": "RUNTIPI_USERNAME",
       "required": true,
-      "hint": "Seu usuário do Runtipi"
+      "hint": "Seu nome de usuário para login na Runtipi."
     },
     {
       "type": "password",
-      "label": "Password", 
+      "label": "Runtipi Password",
+      "name": "RUNTIPI_PASSWORD",
       "env_variable": "RUNTIPI_PASSWORD",
       "required": true,
-      "hint": "Sua senha do Runtipi"
+      "hint": "Sua senha para login na Runtipi."
+    },
+    {
+      "type": "text",
+      "label": "Caminho dos Scripts no Host",
+      "name": "SCRIPTS_PATH",
+      "env_variable": "SCRIPTS_PATH",
+      "required": false,
+      "default": "/media/data/scripts",
+      "hint": "(Opcional) Caminho absoluto no seu servidor onde os scripts a serem executados estão localizados."
     }
   ],
-  "supported_architectures": ["arm64", "amd64"],
-  "created_at": 1691943801422,
-  "updated_at": 1744412235000
+  "supported_architectures": [
+    "arm64",
+    "amd64"
+  ]
 }

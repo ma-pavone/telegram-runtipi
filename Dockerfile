@@ -1,48 +1,34 @@
-# Dockerfile
+# ---- Base Builder Stage ----
+# Usa uma imagem Python completa para compilar dependências
+FROM python:3.11-slim as builder
+
+# Define o diretório de trabalho
+WORKDIR /usr/src/app
+
+# Copia o arquivo de dependências para o diretório de trabalho
+COPY requirements.txt ./
+
+# Instala as dependências em um diretório de usuário para não precisar ser root
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# ---- Final Stage ----
+# Usa uma imagem slim para a execução final
 FROM python:3.11-slim
 
-# Argumentos de build
-ARG BUILD_DATE
-ARG VERSION="1.0.0"
-
-# Labels para metadados
-LABEL maintainer="seu-email@exemplo.com" \
-      description="Bot Telegram para controle do Runtipi" \
-      version="${VERSION}" \
-      build_date="${BUILD_DATE}"
-
-# Variáveis de ambiente
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-RUN apt-get update && apt-get install -y \
-    curl \
-    bash \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
-RUN groupadd -r botuser && useradd -r -g botuser botuser
-
-RUN mkdir -p /app /scripts /app/logs && \
-    chown -R botuser:botuser /app /scripts
-
+# Define o diretório de trabalho final
 WORKDIR /app
 
-COPY requirements.txt .
+# Copia as dependências instaladas do builder stage
+COPY --from=builder /root/.local /root/.local
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Copia o código-fonte da sua aplicação
+COPY src ./src
 
-COPY src/ ./src/
+# Adiciona o diretório de binários dos pacotes de usuário ao PATH
+ENV PATH=/root/.local/bin:$PATH
 
-RUN chown -R botuser:botuser /app
-
-USER botuser
-
+# Expõe a porta do health server
 EXPOSE 7777
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:7777/health || exit 1
-
+# Comando para iniciar a aplicação
 CMD ["python", "-m", "src.app"]

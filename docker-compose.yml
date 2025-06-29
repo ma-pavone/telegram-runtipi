@@ -1,37 +1,8 @@
 services:
-  telegram-runtipi:
-    build: .
-    container_name: telegram-runtipi
-    restart: unless-stopped
-    environment:
-      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
-      - RUNTIPI_HOST=${RUNTIPI_HOST}
-      - RUNTIPI_USERNAME=${RUNTIPI_USERNAME}
-      - RUNTIPI_PASSWORD=${RUNTIPI_PASSWORD}
-    volumes:
-      - ${SCRIPTS_PATH}:/scripts:ro  # Read-only para segurança
-      - ${HOME}/runtipi/logs:/app/logs
-    networks:
-      - runtipi_tipi_main_network
-    ports:
-      - "7777:7777"
-    security_opt:
-      - no-new-privileges:true
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.1'
-          memory: 64M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-        labels: "service=telegram-runtipi"
-networks:
-  runtipi_tipi_main_network:
-    external: true
+  telegram-runtipi-bot:
+    image: maoppenheim/telegram-runtipi
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
