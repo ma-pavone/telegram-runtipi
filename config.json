@@ -2,7 +2,6 @@
   "name": "Telegram Runtipi",
   "available": true,
   "exposable": true,
-  "port": 7777,
   "id": "telegram-runtipi",
   "tipi_version": 5,
   "version": "1.0.0",

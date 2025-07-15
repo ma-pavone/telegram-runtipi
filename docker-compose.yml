@@ -1,6 +1,6 @@
 services:
   telegram-runtipi:
-    image: maoppenheim/telegram-runtipi:latest
+    image: maoppenheim/telegram-runtipi:0.0.1
     build: .
     container_name: telegram-runtipi
     restart: unless-stopped
@@ -12,8 +12,6 @@ services:
       # - ./logs:/app/logs
     networks:
       - runtipi_tipi_main_network
-    ports:
-      - "7777:7777"
     logging:
       driver: "json-file"
       options:
