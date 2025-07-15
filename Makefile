@@ -1,4 +1,4 @@
-.PHONY: help build up down restart logs clean test lint format check-env health
+.PHONY: help build up down restart logs clean test check-env
 
 # Variáveis
 COMPOSE_FILE = docker-compose.yml
@@ -15,7 +15,6 @@ help: ## Mostra esta mensagem de ajuda
 	@echo "  make build    # Constrói a imagem"
 	@echo "  make up       # Inicia o bot"
 	@echo "  make logs     # Visualiza logs"
-	@echo "  make health   # Verifica saúde do bot"
 
 check-env: ## Verifica se as variáveis de ambiente estão definidas
 	@echo "🔍 Verificando variáveis de ambiente..."
@@ -53,15 +52,6 @@ status: ## Mostra status do container
 	@echo "📊 Status do container:"
 	@docker ps -f name=$(CONTAINER_NAME) --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
-health: ## Verifica saúde do bot
-	@echo "🏥 Verificando saúde do bot..."
-	@if docker ps -f name=$(CONTAINER_NAME) --format '{{.Names}}' | grep -q $(CONTAINER_NAME); then \
-		echo "✅ Container está rodando"; \
-		docker exec $(CONTAINER_NAME) python -c "print('✅ Python OK')" 2>/dev/null || echo "❌ Python com problemas"; \
-	else \
-		echo "❌ Container não está rodando"; \
-	fi
-
 clean: down ## Remove containers, volumes e imagens
 	@echo "🧹 Limpando recursos Docker..."
 	docker-compose down -v --rmi all --remove-orphans
@@ -73,7 +63,7 @@ shell: ## Acessa shell do container
 
 test-api: ## Testa conexão com API do Runtipi
 	@echo "🧪 Testando conexão com API..."
-	docker exec $(CONTAINER_NAME) python -c "from src.runtipi_api import RuntipiAPI; import os; api = RuntipiAPI(os.getenv('RUNTIPI_HOST'), os.getenv('RUNTIPI_USERNAME'), os.getenv('RUNTIPI_PASSWORD')); print('✅ API OK' if api.health_check() else '❌ API com problemas')"
+	docker exec $(CONTAINER_NAME) python src/test_runtipi.py
 
 update: ## Atualiza e reconstrói o bot
 	@echo "🔄 Atualizando bot..."
@@ -82,11 +72,6 @@ update: ## Atualiza e reconstrói o bot
 	$(MAKE) build
 	$(MAKE) up
 
-backup-logs: ## Faz backup dos logs
-	@echo "💾 Fazendo backup dos logs..."
-	@mkdir -p ./backups
-	@docker cp $(CONTAINER_NAME):/app/logs ./backups/logs-$(shell date +%Y%m%d_%H%M%S) 2>/dev/null || echo "ℹ️ Sem logs para backup"
-
 dev: ## Modo desenvolvimento com rebuild automático
 	@echo "🔧 Modo desenvolvimento..."
 	docker-compose up --build
@@ -94,3 +79,7 @@ dev: ## Modo desenvolvimento com rebuild automático
 # Debug e troubleshooting
 debug: ## Mostra informações de debug
 	@echo "🐛 Informações de debug:"
+	@docker ps -f name=$(CONTAINER_NAME)
+	@echo ""
+	@echo "Logs recentes:"
+	@docker logs --tail=20 $(CONTAINER_NAME) 2>/dev/null || echo "Container não encontrado"

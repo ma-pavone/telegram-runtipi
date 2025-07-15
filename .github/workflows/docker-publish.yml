@@ -26,4 +26,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: maoppenheim/telegram-runtipi:latest
+          tags: maoppenheim/telegram-runtipi:0.0.1

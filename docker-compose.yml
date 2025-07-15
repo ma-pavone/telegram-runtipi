@@ -1,6 +1,6 @@
 services:
   telegram-runtipi:
-    image: maoppenheim/telegram-runtipi
+    image: maoppenheim/telegram-runtipi:latest
     build: .
     container_name: telegram-runtipi
     restart: unless-stopped
@@ -14,16 +14,6 @@ services:
       - runtipi_tipi_main_network
     ports:
       - "7777:7777"
-    security_opt:
-      - no-new-privileges:true
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.1'
-          memory: 64M
     logging:
       driver: "json-file"
       options:
