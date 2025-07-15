@@ -1,4 +1,3 @@
-# src/api/runtipi.py
 import requests
 import logging
 from typing import Dict, Optional, Any
@@ -6,8 +5,6 @@ from typing import Dict, Optional, Any
 logger = logging.getLogger(__name__)
 
 class RuntipiAPI:
-    """Cliente para interagir com a API do Runtipi"""
-    
     def __init__(self, host: str, username: str, password: str):
         self.host = host.rstrip('/')
         self.username = username
@@ -28,7 +25,7 @@ class RuntipiAPI:
             
         try:
             auth_url = f"{self.host}/api/auth/login"
-            payload = { "username": self.username, "password": self.password }
+            payload = {"username": self.username, "password": self.password}
             headers = {
                 'Content-Type': 'application/json',
                 'Origin': self.host,
@@ -36,15 +33,16 @@ class RuntipiAPI:
             }
 
             response = self.session.post(auth_url, json=payload, headers=headers, verify=False)
+            
             if response.status_code in [200, 201]:
                 self._authenticated = True
-                logger.info("Autenticado com sucesso na API do Runtipi")
                 return True
-            logger.error(f"Falha na autenticação: {response.status_code} - {response.text}")
+                
+            logger.error(f"Authentication failed: {response.status_code}")
             return False
                 
         except Exception as e:
-            logger.error(f"Erro na autenticação: {e}")
+            logger.error(f"Authentication error: {e}")
             return False
     
     def _make_request(self, method: str, endpoint: str, **kwargs) -> Optional[Dict[str, Any]]:
@@ -54,7 +52,7 @@ class RuntipiAPI:
         try:
             url = f"{self.host}/api{endpoint}"
             headers = kwargs.pop('headers', {})
-            headers.update({ 'Referer': f'{self.host}/apps' })
+            headers.update({'Referer': f'{self.host}/apps'})
 
             response = self.session.request(method, url, headers=headers, verify=False, **kwargs)
 
@@ -69,89 +67,78 @@ class RuntipiAPI:
                 try:
                     return response.json()
                 except ValueError:
-                    return { "success": True, "data": response.text, "status_code": response.status_code }
+                    return {"success": True, "data": response.text, "status_code": response.status_code}
             else:
-                logger.error(f"Erro {response.status_code} em {method} {endpoint}: {response.text}")
+                logger.error(f"Request failed {response.status_code}: {method} {endpoint}")
                 return None
                 
         except Exception as e:
-            logger.error(f"Erro na requisição {method} {endpoint}: {e}")
+            logger.error(f"Request error {method} {endpoint}: {e}")
             return None
 
     def get_installed_apps(self) -> Optional[Dict[str, Any]]:
         return self._make_request("GET", "/apps/installed")
     
-    def get_app_status(self, app_name: str) -> Optional[str]:
-        """Retorna apenas o status do app como string"""
+    def _find_app_by_id(self, app_name: str) -> Optional[Dict[str, Any]]:
         data = self.get_installed_apps()
         if not isinstance(data, dict) or 'installed' not in data:
-            logger.error("Resposta inválida de get_installed_apps")
             return None
         
         for app in data['installed']:
-            if not isinstance(app, dict):
-                continue
-            info = app.get('info')
-            app_data = app.get('app')
-            if isinstance(info, dict) and isinstance(app_data, dict):
-                if info.get('id') == app_name:
-                    return app_data.get('status')
+            if isinstance(app, dict):
+                info = app.get('info', {})
+                if isinstance(info, dict) and info.get('id') == app_name:
+                    return app
+        return None
+    
+    def get_app_status(self, app_name: str) -> Optional[str]:
+        app = self._find_app_by_id(app_name)
+        if app:
+            app_data = app.get('app', {})
+            if isinstance(app_data, dict):
+                return app_data.get('status')
         return None
     
     def get_app_data(self, app_name: str) -> Optional[Dict[str, Any]]:
-        """Retorna o objeto completo do app"""
-        data = self.get_installed_apps()
-        if not isinstance(data, dict) or 'installed' not in data:
-            logger.error("Resposta inválida de get_installed_apps")
-            return None
-        
-        for app in data['installed']:
-            if not isinstance(app, dict):
-                continue
-            info = app.get('info')
-            app_data = app.get('app')
-            if isinstance(info, dict) and isinstance(app_data, dict):
-                if info.get('id') == app_name:
-                    return app  # Retorna o objeto completo
-        return None
+        return self._find_app_by_id(app_name)
     
     def get_all_apps_status(self) -> Optional[Dict[str, str]]:
         data = self.get_installed_apps()
         if not isinstance(data, dict) or 'installed' not in data:
-            logger.error("Resposta inválida de get_installed_apps")
             return None
         
         result = {}
         for app in data['installed']:
-            if not isinstance(app, dict):
-                continue
-            info = app.get('info')
-            app_data = app.get('app')
-            if isinstance(info, dict) and isinstance(app_data, dict):
-                app_id = info.get('id')
-                status = app_data.get('status')
-                if app_id and status:
-                    result[app_id] = status
+            if isinstance(app, dict):
+                info = app.get('info', {})
+                app_data = app.get('app', {})
+                
+                if isinstance(info, dict) and isinstance(app_data, dict):
+                    app_id = info.get('id')
+                    status = app_data.get('status')
+                    if app_id and status:
+                        result[app_id] = status
         return result
 
     def _lifecycle(self, app_name: str, action: str) -> bool:
         if action not in ["start", "stop"]:
-            logger.error(f"Ação inválida: {action}")
+            logger.error(f"Invalid action: {action}")
             return False
+            
         app_id_encoded = f"{app_name}%3Amigrated"
         endpoint = f"/app-lifecycle/{app_id_encoded}/{action}"
         headers = {
             'Origin': self.host,
             'Referer': f'{self.host}/apps/migrated/{app_name}'
         }
+        
         result = self._make_request("POST", endpoint, headers=headers)
         if not result:
             return False
+            
         if isinstance(result, dict):
-            if 'success' in result:
-                return bool(result['success'])
-            if result.get('status_code') in [200, 201, 202]:
-                return True
+            return result.get('success', result.get('status_code', 0) in [200, 201, 202])
+        
         return True
 
     def start_app(self, app_name: str) -> bool:
@@ -164,12 +151,12 @@ class RuntipiAPI:
         try:
             return self._lifecycle(app_name, action)
         except Exception as e:
-            logger.error(f"Erro no toggle para {app_name}: {e}")
+            logger.error(f"Toggle error for {app_name}: {e}")
             return False
 
     def test_connection(self) -> bool:
         try:
             return bool(self.get_installed_apps())
         except Exception as e:
-            logger.error(f"Erro no teste de conexão: {e}")
+            logger.error(f"Connection test error: {e}")
             return False
