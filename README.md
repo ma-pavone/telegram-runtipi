@@ -1,95 +1,54 @@
-# Telegram Bot para Runtipi
+# 🤖 Telegram Runtipi Bot
 
-Um bot para Telegram que permite controlar e monitorar seus aplicativos Runtipi, além de executar scripts remotamente.
+![Python](https://img.shields.io/badge/Python-3.11-blue.svg)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)
 
----
+Bot do Telegram escrito em **Python** para **gerenciar um servidor [Runtipi](https://runtipi.io/)**. Permite visualizar status de apps, iniciar/parar serviços e executar scripts `.sh` diretamente do Telegram.
 
-## Funcionalidades
+## ✨ Funcionalidades
 
-- **Listar Apps**: Veja todos os aplicativos instalados e seu status (rodando/parado).
-- **Controlar Apps**: Inicie ou pare qualquer aplicativo com uma simples mensagem.
-- **Executar Scripts**: Liste e execute scripts shell localizados em um diretório seguro.
-- **Status Rápido**: Obtenha um resumo rápido de quantos apps estão ativos.
-- **Segurança**: O bot responde apenas a um `chat_id` do Telegram pré-configurado.
-
----
-
-## Comandos Disponíveis
-
-- `/start` ou `/help` - Mostra a mensagem de ajuda.
-- `/apps` - Lista todos os apps instalados com seus respectivos status.
-- `/status` - Mostra um resumo de quantos apps estão rodando e parados.
-- `/scripts` - Lista os scripts executáveis disponíveis no diretório configurado.
-- `/run <nome_do_script>` - Executa um script específico.
-- *Qualquer outra mensagem* (ex: `jellyfin`) - Tenta dar toggle (ligar/desligar) no app com aquele nome.
+- 🔍 **Listagem de Apps**: Visualize todos os aplicativos do Runtipi e seus status.
+- 🟢🔴 **Controle de Apps**: Inicie ou pare qualquer app via comando.
+- 🧾 **Execução de Scripts**: Scripts `.sh` executáveis a partir de comandos do bot.
+- 🔐 **Segurança**: Restringe comandos a um `CHAT_ID` autorizado.
+- ⚡ **Cache Inteligente**: Reduz chamadas repetidas à API.
+- 🧩 **Integração com Runtipi**: App compatível com App Store personalizada do Runtipi.
 
 ---
 
-## Instalação via Runtipi App Store
+## 📜 Comandos Disponíveis
 
-1. Adicione o repositório deste projeto à sua lista de App Stores customizadas no Runtipi.
-2. Encontre "Telegram Runtipi Bot" na sua App Store e clique em "Instalar".
-3. Preencha os campos de configuração na interface do Runtipi:
-   - **Credenciais do Runtipi**: Usuário e senha para o bot se autenticar na API.
-   - **Configurações do Telegram**: O token do seu bot e o ID do chat autorizado.
-   - **Caminho dos Scripts**: O diretório no seu servidor que contém os scripts que o bot poderá executar.
-4. Clique em "Instalar" e o Runtipi cuidará do resto.
+| Comando | Descrição |
+|--------|-----------|
+| `/start` ou `/help` | Mostra lista de comandos disponíveis |
+| `/apps` | Lista os apps com seus status (🟢 Rodando, 🔴 Parado) |
+| `/status` | Mostra resumo de apps rodando/parados |
+| `/toggle <app_id>` | Inicia ou para um app específico. Ex: `/toggle jellyfin` |
+| `/scripts` | Lista scripts `.sh` disponíveis |
+| `/run <script.sh>` | Executa script autorizado. Ex: `/run backup.sh` |
 
 ---
 
-## Instalação Manual
+## ⚙️ Configuração
 
-### Pré-requisitos
+Crie um arquivo `.env` com base no exemplo abaixo:
 
-- Docker e Docker Compose instalados
-- Bot do Telegram criado via @BotFather
-- Acesso ao seu servidor Runtipi
+```env
+# Token do bot Telegram (@BotFather)
+TELEGRAM_TOKEN="SEU_TOKEN_AQUI"
 
-### Configuração
+# ID do chat autorizado (use @userinfobot)
+ALLOWED_CHAT_ID="SEU_CHAT_ID"
 
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/ma-pavone/telegram-runtipi.git
-   cd telegram-runtipi
-   ```
+# Endereço do servidor Runtipi
+RUNTIPI_HOST="http://192.168.15.3:8080"
 
-2. Crie o arquivo `.env` baseado no `.env.example`:
-   ```bash
-   cp .env.example .env
-   ```
+# Credenciais de login
+RUNTIPI_USER="admin"
+RUNTIPI_PASSWORD="minhaSenhaSecreta"
 
-3. Edite o arquivo `.env` com suas configurações:
-   ```
-   TELEGRAM_TOKEN=seu_token_aqui
-   TELEGRAM_CHAT_ID=seu_chat_id_aqui
-   RUNTIPI_HOST=http://192.168.15.3:80
-   RUNTIPI_USERNAME=seu_usuario
-   RUNTIPI_PASSWORD=sua_senha
-   SCRIPTS_PATH=/caminho/para/scripts
-   ```
+# (Opcional) Nível de log: DEBUG, INFO, WARNING, ERROR
+LOG_LEVEL="INFO"
 
-4. Inicie o bot:
-   ```bash
-   docker-compose up -d
-   ```
-
-### Usando o Makefile (Opcional)
-
-Se você preferir usar o Makefile para gerenciar o bot:
-
-```bash
-# Verificar variáveis de ambiente
-make check-env
-
-# Construir a imagem
-make build
-
-# Iniciar o bot
-make up
-
-# Ver logs
-make logs
-
-# Parar o bot
-make down
-```
+# (Opcional) Caminho interno onde estão os scripts
+SCRIPTS_DIR="/scripts"
