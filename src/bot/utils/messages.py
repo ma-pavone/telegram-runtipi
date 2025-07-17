@@ -1,10 +1,24 @@
 from typing import final
-STATUS_ICON_OK = "✅"
-STATUS_ICON_OFF = "❌"
-ICON_BOT = "🤖"
-ICON_SUMMARY = "📊"
-ICON_SCRIPTS = "📜"
-ICON_TIP = "💡"
+from enum import Enum
+
+# ✅ Enums para ícones e mensagens
+class Icons(Enum):
+    STATUS_OK = "✅"
+    STATUS_OFF = "❌"
+    BOT = "🤖"
+    SUMMARY = "📊"
+    SCRIPTS = "📜"
+    TIP = "💡"
+    ERROR = "🔴"
+    WARNING = "⚠️"
+    SUCCESS = "🎉"
+    LOADING = "⏳"
+
+class MessageType(Enum):
+    INFO = "info"
+    ERROR = "error"
+    SUCCESS = "success"
+    WARNING = "warning"
 
 @final
 class BotMessages:
@@ -14,60 +28,124 @@ class BotMessages:
     def get_help_message() -> str:
         """Retorna a mensagem de ajuda formatada em Markdown."""
         return (
-            f"{ICON_BOT} *Bot de Controle do Runtipi* {ICON_BOT}\n\n"
+            f"{Icons.BOT.value} *Bot de Controle do Runtipi* {Icons.BOT.value}\n\n"
             "Comandos disponíveis:\n\n"
             "*/apps* - Lista todos os aplicativos e seus status.\n"
             "*/status* - Mostra um resumo rápido de quantos apps estão ativos.\n"
-            f"*/scripts* - {ICON_SCRIPTS} Lista os scripts disponíveis para execução.\n"
+            f"*/scripts* - {Icons.SCRIPTS.value} Lista os scripts disponíveis para execução.\n"
             "*/run `[nome_do_script]`* - Executa um script específico.\n"
             "*/help* - Mostra esta mensagem de ajuda.\n\n"
-            f"{ICON_TIP} *Dica*: Envie o nome de um app (ex: `jellyfin`) para iniciá-lo ou pará-lo."
+            f"{Icons.TIP.value} *Dica*: Envie o nome de um app (ex: `jellyfin`) para iniciá-lo ou pará-lo."
         )
 
     @staticmethod
-    def format_apps_list(apps: list[dict]) -> str:
+    def format_apps_list(apps: list) -> str:
         """Formata a lista de aplicativos com status."""
         if not apps:
-            return "Nenhum aplicativo encontrado."
+            return f"{Icons.WARNING.value} Nenhum aplicativo encontrado."
 
         lines = ["*Aplicativos Instalados:*\n"]
-        for app in sorted(apps, key=lambda x: x.get('id', '')):
-            status_icon = STATUS_ICON_OK if app.get('status') == "running" else STATUS_ICON_OFF
-            lines.append(f"{status_icon} `{app.get('id', 'N/A')}`")
+        
+        # ✅ Separar apps por status
+        running_apps = [app for app in apps if getattr(app, 'status', None) and app.status.value == "running"]
+        stopped_apps = [app for app in apps if getattr(app, 'status', None) and app.status.value != "running"]
+        
+        if running_apps:
+            lines.append(f"{Icons.STATUS_OK.value} *Ativos ({len(running_apps)}):*")
+            for app in sorted(running_apps, key=lambda x: x.id):
+                lines.append(f"  • `{app.id}`")
+            lines.append("")
+        
+        if stopped_apps:
+            lines.append(f"{Icons.STATUS_OFF.value} *Inativos ({len(stopped_apps)}):*")
+            for app in sorted(stopped_apps, key=lambda x: x.id):
+                lines.append(f"  • `{app.id}`")
         
         return "\n".join(lines)
 
     @staticmethod
-    def format_status_summary(apps: list[dict]) -> str:
+    def format_status_summary(apps: list) -> str:
         """Cria um resumo do status dos apps."""
         if not apps:
-            return "Nenhum aplicativo para resumir."
+            return f"{Icons.WARNING.value} Nenhum aplicativo para resumir."
         
         total = len(apps)
-        running = sum(1 for app in apps if app.get('status') == "running")
-        return f"{ICON_SUMMARY} *Resumo*: {running} de {total} aplicativos estão ativos."
+        running = sum(1 for app in apps if getattr(app, 'status', None) and app.status.value == "running")
+        stopped = total - running
+        
+        return (
+            f"{Icons.SUMMARY.value} *Resumo do Sistema:*\n"
+            f"{Icons.STATUS_OK.value} Ativos: {running}\n"
+            f"{Icons.STATUS_OFF.value} Inativos: {stopped}\n"
+            f"📱 Total: {total}"
+        )
 
     @staticmethod
     def format_scripts_list(scripts: list[str]) -> str:
         """Formata a lista de scripts executáveis."""
         if not scripts:
-            return f"{ICON_SCRIPTS} Nenhum script executável encontrado no diretório configurado."
+            return f"{Icons.WARNING.value} Nenhum script executável encontrado no diretório configurado."
         
-        lines = [f"{ICON_SCRIPTS} *Scripts Executáveis:*\n"]
+        lines = [f"{Icons.SCRIPTS.value} *Scripts Executáveis ({len(scripts)}):*\n"]
         lines.extend(f"• `{script}`" for script in sorted(scripts))
-        lines.append("\nUse `/run [nome_do_script]` para executar um deles.")
+        lines.append(f"\n{Icons.TIP.value} Use `/run [nome_do_script]` para executar um deles.")
         return "\n".join(lines)
 
     @staticmethod
     def format_script_output(script_name: str, stdout: str, stderr: str, exit_code: int) -> str:
         """Formata a saída de um script executado."""
+        success_icon = Icons.SUCCESS.value if exit_code == 0 else Icons.ERROR.value
         status = "sucesso" if exit_code == 0 else "falha"
-        header = f"Resultado da execução de `{script_name}` (status: {status}, código: {exit_code}):"
         
-        output_str = f"*Saída Padrão (stdout):*\n```\n{stdout or '(vazio)'}\n```"
+        header = f"{success_icon} Execução de `{script_name}` - {status} (código: {exit_code})"
+        
+        # ✅ Limitar tamanho da output para evitar mensagens muito longas
+        max_length = 3000
+        
+        if stdout:
+            if len(stdout) > max_length:
+                stdout = stdout[:max_length] + "\n... (saída truncada)"
+            output_str = f"\n*📤 Saída Padrão:*\n```\n{stdout}\n```"
+        else:
+            output_str = f"\n*📤 Saída Padrão:* (vazia)"
         
         error_str = ""
         if stderr:
-            error_str = f"\n*Saída de Erro (stderr):*\n```\n{stderr}\n```"
+            if len(stderr) > max_length:
+                stderr = stderr[:max_length] + "\n... (saída truncada)"
+            error_str = f"\n*{Icons.ERROR.value} Saída de Erro:*\n```\n{stderr}\n```"
             
-        return f"{header}\n\n{output_str}{error_str}"
+        return f"{header}{output_str}{error_str}"
+
+    @staticmethod
+    def format_app_action_result(app_id: str, action: str, success: bool, error: str = None) -> str:
+        """Formata o resultado de uma ação em um app."""
+        if success:
+            icon = Icons.SUCCESS.value
+            verb = "ligado" if action == "start" else "desligado"
+            return f"{icon} App `{app_id}` foi {verb} com sucesso!"
+        else:
+            icon = Icons.ERROR.value
+            return f"{icon} Falha ao {action} o app `{app_id}`: {error or 'Erro desconhecido'}"
+
+    @staticmethod
+    def format_error_message(error: str, context: str = None) -> str:
+        """Formata uma mensagem de erro."""
+        if context:
+            return f"{Icons.ERROR.value} Erro em {context}: {error}"
+        return f"{Icons.ERROR.value} {error}"
+
+    @staticmethod
+    def format_loading_message(action: str) -> str:
+        """Formata uma mensagem de carregamento."""
+        return f"{Icons.LOADING.value} {action}..."
+
+    @staticmethod
+    def format_success_message(message: str) -> str:
+        """Formata uma mensagem de sucesso."""
+        return f"{Icons.SUCCESS.value} {message}"
+
+    @staticmethod
+    def format_warning_message(message: str) -> str:
+        """Formata uma mensagem de aviso."""
+        return f"{Icons.WARNING.value} {message}"
