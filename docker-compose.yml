@@ -8,8 +8,8 @@ services:
       - .env
     volumes:
       - ${SCRIPTS_PATH}:/scripts:ro
-      # (Opcional) Mapeie um volume para logs persistentes se usar o FileHandler.
-      # - ./logs:/app/logs
+      # - ${HOME}/runtipi/logs:/app/logs
+
     networks:
       - runtipi_tipi_main_network
     ports:
@@ -18,7 +18,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "2"
+        max-file: "3"
         labels: "service=telegram-runtipi"
 
 networks:

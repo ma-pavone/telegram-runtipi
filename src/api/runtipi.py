@@ -1,12 +1,8 @@
 import requests
 import logging
-from typing import Dict, Optional, Any, List
-from .cache import cached
+from typing import Dict, Optional, Any
 
 logger = logging.getLogger(__name__)
-
-# Desativa avisos de SSL para ambientes locais (não ideal para produção externa)
-requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 class RuntipiAPI:
     def __init__(self, host: str, username: str, password: str):
@@ -14,98 +10,153 @@ class RuntipiAPI:
         self.username = username
         self.password = password
         self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'TelegramRuntipiBot/1.0',
-            'Accept': 'application/json, */*',
-        })
         self._authenticated = False
-
+        
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0',
+            'Accept': '*/*',
+            'Accept-Language': 'en,pt-BR;q=0.9,pt;q=0.8',
+            'Connection': 'keep-alive'
+        })
+        
     def _authenticate(self) -> bool:
-        """Realiza a autenticação na API do Runtipi."""
         if self._authenticated:
             return True
-        
-        auth_url = f"{self.host}/api/auth/login"
-        payload = {"username": self.username, "password": self.password}
-        
+            
         try:
-            response = self.session.post(auth_url, json=payload, verify=False, timeout=10)
-            response.raise_for_status()
-            self._authenticated = True
-            logger.info("Authentication successful.")
-            return True
-        except requests.RequestException as e:
-            logger.error(f"Authentication failed: {e}")
-            self._authenticated = False
-            return False
+            auth_url = f"{self.host}/api/auth/login"
+            payload = {"username": self.username, "password": self.password}
+            headers = {
+                'Content-Type': 'application/json',
+                'Origin': self.host,
+                'Referer': f'{self.host}/login'
+            }
 
-    def _make_request(self, method: str, endpoint: str, **kwargs) -> Optional[Any]:
-        """Realiza uma requisição à API, cuidando da autenticação."""
+            response = self.session.post(auth_url, json=payload, headers=headers, verify=False)
+            
+            if response.status_code in [200, 201]:
+                self._authenticated = True
+                return True
+                
+            logger.error(f"Authentication failed: {response.status_code}")
+            return False
+                
+        except Exception as e:
+            logger.error(f"Authentication error: {e}")
+            return False
+    
+    def _make_request(self, method: str, endpoint: str, **kwargs) -> Optional[Dict[str, Any]]:
         if not self._authenticate():
             return None
             
-        url = f"{self.host}/api{endpoint}"
-        kwargs.setdefault('verify', False)
-        kwargs.setdefault('timeout', 15)
-
         try:
-            response = self.session.request(method, url, **kwargs)
-            if response.status_code == 401: # Token expirado
-                logger.warning("Token expired, re-authenticating...")
+            url = f"{self.host}/api{endpoint}"
+            headers = kwargs.pop('headers', {})
+            headers.update({'Referer': f'{self.host}/apps'})
+
+            response = self.session.request(method, url, headers=headers, verify=False, **kwargs)
+
+            if response.status_code == 401:
                 self._authenticated = False
                 if self._authenticate():
-                    response = self.session.request(method, url, **kwargs)
+                    response = self.session.request(method, url, headers=headers, verify=False, **kwargs)
+                else:
+                    return None
 
-            response.raise_for_status()
-            
-            # Retorna JSON se possível, senão o texto da resposta.
-            try:
-                return response.json()
-            except ValueError:
-                return response.text or None
-
-        except requests.RequestException as e:
-            logger.error(f"Request failed to {method} {endpoint}: {e}")
+            if response.status_code in [200, 201, 202]:
+                try:
+                    return response.json()
+                except ValueError:
+                    return {"success": True, "data": response.text, "status_code": response.status_code}
+            else:
+                logger.error(f"Request failed {response.status_code}: {method} {endpoint}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Request error {method} {endpoint}: {e}")
             return None
 
-    @cached(ttl=30, rate_limit=5) # Cache por 30s, com limite de chamada de 5s
-    def get_installed_apps(self) -> List[Dict[str, Any]]:
-        """Busca e cacheia a lista de apps instalados."""
-        data = self._make_request("GET", "/apps/installed")
-        return data.get('installed', []) if isinstance(data, dict) else []
-
-    def get_all_apps_status(self) -> Dict[str, str]:
-        """Retorna um dicionário com o status de todos os apps."""
-        apps = self.get_installed_apps()
-        return {
-            app['info']['id']: app['app']['status']
-            for app in apps
-            if 'info' in app and 'id' in app['info'] and 'app' in app and 'status' in app['app']
-        }
-
-    def get_app_data(self, app_id: str) -> Optional[Dict[str, Any]]:
-        """Busca os dados de um app específico pelo ID."""
-        for app in self.get_installed_apps():
-            if app.get('info', {}).get('id') == app_id:
-                return app
+    def get_installed_apps(self) -> Optional[Dict[str, Any]]:
+        return self._make_request("GET", "/apps/installed")
+    
+    def _find_app_by_id(self, app_name: str) -> Optional[Dict[str, Any]]:
+        data = self.get_installed_apps()
+        if not isinstance(data, dict) or 'installed' not in data:
+            return None
+        
+        for app in data['installed']:
+            if isinstance(app, dict):
+                info = app.get('info', {})
+                if isinstance(info, dict) and info.get('id') == app_name:
+                    return app
         return None
+    
+    def get_app_status(self, app_name: str) -> Optional[str]:
+        app = self._find_app_by_id(app_name)
+        if app:
+            app_data = app.get('app', {})
+            if isinstance(app_data, dict):
+                return app_data.get('status')
+        return None
+    
+    def get_app_data(self, app_name: str) -> Optional[Dict[str, Any]]:
+        return self._find_app_by_id(app_name)
+    
+    def get_all_apps_status(self) -> Optional[Dict[str, str]]:
+        data = self.get_installed_apps()
+        if not isinstance(data, dict) or 'installed' not in data:
+            return None
+        
+        result = {}
+        for app in data['installed']:
+            if isinstance(app, dict):
+                info = app.get('info', {})
+                app_data = app.get('app', {})
+                
+                if isinstance(info, dict) and isinstance(app_data, dict):
+                    app_id = info.get('id')
+                    status = app_data.get('status')
+                    if app_id and status:
+                        result[app_id] = status
+        return result
 
-    def toggle_app_action(self, app_id: str) -> bool:
-        """Inicia ou para um app com base no seu estado atual."""
-        app_data = self.get_app_data(app_id)
-        if not app_data:
-            logger.error(f"App not found: {app_id}")
+    def _lifecycle(self, app_name: str, action: str) -> bool:
+        if action not in ["start", "stop"]:
+            logger.error(f"Invalid action: {action}")
             return False
             
-        current_status = app_data.get('app', {}).get('status')
-        action = "stop" if current_status == "running" else "start"
-        
-        app_id_encoded = f"{app_id}%3Amigrated"
+        app_id_encoded = f"{app_name}%3Amigrated"
         endpoint = f"/app-lifecycle/{app_id_encoded}/{action}"
+        headers = {
+            'Origin': self.host,
+            'Referer': f'{self.host}/apps/migrated/{app_name}'
+        }
         
-        result = self._make_request("POST", endpoint)
-        return result is not None
+        result = self._make_request("POST", endpoint, headers=headers)
+        if not result:
+            return False
+            
+        if isinstance(result, dict):
+            return result.get('success', result.get('status_code', 0) in [200, 201, 202])
+        
+        return True
+
+    def start_app(self, app_name: str) -> bool:
+        return self._lifecycle(app_name, "start")
+
+    def stop_app(self, app_name: str) -> bool:
+        return self._lifecycle(app_name, "stop")
+
+    def toggle_app_action(self, app_name: str, action: str) -> bool:
+        try:
+            return self._lifecycle(app_name, action)
+        except Exception as e:
+            logger.error(f"Toggle error for {app_name}: {e}")
+            return False
 
     def test_connection(self) -> bool:
-        """Testa a conexão e autenticação com a API."""
-        return self._authenticate()
+        try:
+            return bool(self.get_installed_apps())
+        except Exception as e:
+            logger.error(f"Connection test error: {e}")
+            return False
