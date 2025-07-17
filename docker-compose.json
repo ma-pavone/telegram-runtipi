@@ -4,7 +4,6 @@
       "name": "telegram-runtipi",
       "isMain": true,
       "image": "maoppenheim/telegram-runtipi:0.0.1",
-      "internalPort": 7777,
       "security_opt": [
         "no-new-privileges:true"
       ],
@@ -22,19 +21,7 @@
           "hostPath": "${APP_DATA_DIR}/logs",
           "containerPath": "/app/logs"
         }
-      ],
-      "deploy": {
-        "resources": {
-          "limits": {
-            "cpus": "0.5",
-            "memory": "256M"
-          },
-          "reservations": {
-            "cpus": "0.1",
-            "memory": "64M"
-          }
-        }
-      }
+      ]
     }
   ]
 }
