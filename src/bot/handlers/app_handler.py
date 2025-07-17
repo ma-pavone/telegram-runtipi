@@ -18,15 +18,12 @@ class AppCommandHandler:
     async def list_apps(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handler para o comando /apps."""
         try:
-            # ✅ Mostrar mensagem de carregamento
             loading_msg = await update.effective_chat.send_message(
                 BotMessages.format_loading_message("Buscando aplicativos")
             )
             
             apps = self._api.get_installed_apps()
             message = BotMessages.format_apps_list(apps)
-            
-            # ✅ Editar mensagem de carregamento com resultado
             await context.bot.edit_message_text(
                 chat_id=update.effective_chat.id,
                 message_id=loading_msg.message_id,
@@ -72,7 +69,6 @@ class AppCommandHandler:
         app_id = update.message.text.strip().lower()
         
         try:
-            # ✅ Buscar app usando método melhorado
             target_app = self._api.find_app_by_id(app_id)
 
             if not target_app:
@@ -83,21 +79,13 @@ class AppCommandHandler:
                     parse_mode='Markdown'
                 )
                 return
-
-            # ✅ Determinar ação baseada no status enum
             action = "stop" if target_app.status == AppStatus.RUNNING else "start"
             action_verb = "Desligando" if action == "stop" else "Ligando"
-            
-            # ✅ Mostrar mensagem de carregamento
             loading_msg = await update.effective_chat.send_message(
                 BotMessages.format_loading_message(f"{action_verb} `{app_id}`"),
                 parse_mode='Markdown'
             )
-            
-            # ✅ Executar ação usando response estruturada
             response = self._api.toggle_app_action(app_id, target_app.status)
-            
-            # ✅ Processar resultado da ação
             if response.success:
                 result_message = BotMessages.format_app_action_result(
                     app_id, action, True
@@ -147,8 +135,6 @@ class AppCommandHandler:
                 BotMessages.format_loading_message(f"Reiniciando `{app_id}`"),
                 parse_mode='Markdown'
             )
-            
-            # ✅ Parar primeiro se estiver rodando
             if target_app.status == AppStatus.RUNNING:
                 stop_response = self._api.stop_app(app_id)
                 if not stop_response.success:
@@ -161,8 +147,6 @@ class AppCommandHandler:
                         parse_mode='Markdown'
                     )
                     return
-            
-            # ✅ Iniciar o app
             start_response = self._api.start_app(app_id)
             
             if start_response.success:

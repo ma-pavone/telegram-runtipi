@@ -28,19 +28,14 @@ class BotConfig:
         Levanta um ValueError se uma variável essencial estiver ausente ou inválida.
         """
         try:
-            # ✅ Validação do chat_id
             chat_id_str = os.environ["TELEGRAM_CHAT_ID"]
             try:
                 chat_id = int(chat_id_str)
             except ValueError:
                 raise ValueError(f"TELEGRAM_CHAT_ID deve ser um número inteiro, recebido: {chat_id_str}")
-            
-            # ✅ Validação do diretório de scripts
             scripts_path = os.getenv("SCRIPTS_PATH", "/scripts")
             if not Path(scripts_path).exists():
                 raise FileNotFoundError(f"Diretório de scripts não encontrado: {scripts_path}")
-            
-            # ✅ Validação da URL do Runtipi
             runtipi_host = os.getenv("RUNTIPI_HOST", "http://localhost:8080")
             if not runtipi_host.startswith(('http://', 'https://')):
                 raise ValueError(f"RUNTIPI_HOST deve começar com http:// ou https://, recebido: {runtipi_host}")

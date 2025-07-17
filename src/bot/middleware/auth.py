@@ -1,6 +1,6 @@
 import logging
 from functools import wraps
-from typing import Callable, final
+from typing import Callable, final, Any
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -20,14 +20,14 @@ class AuthMiddleware:
     def __call__(self, func: Callable) -> Callable:
         """Permite que a instância da classe seja usada como um decorador."""
         @wraps(func)
-        async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs) -> None:
+        async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs) -> Any:
             if not update or not update.effective_chat:
-                return
+                return None
 
             if update.effective_chat.id != self._allowed_chat_id:
                 logger.warning(f"Acesso negado para o chat_id: {update.effective_chat.id}")
                 await update.effective_chat.send_message("⛔ Acesso negado. Este bot é privado.")
-                return
+                return None
             
-            await func(update, context, *args, **kwargs)
+            return await func(update, context, *args, **kwargs)
         return wrapped

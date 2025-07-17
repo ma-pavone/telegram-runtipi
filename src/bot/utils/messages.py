@@ -1,7 +1,5 @@
 from typing import final
 from enum import Enum
-
-# ✅ Enums para ícones e mensagens
 class Icons(Enum):
     STATUS_OK = "✅"
     STATUS_OFF = "❌"
@@ -45,8 +43,6 @@ class BotMessages:
             return f"{Icons.WARNING.value} Nenhum aplicativo encontrado."
 
         lines = ["*Aplicativos Instalados:*\n"]
-        
-        # ✅ Separar apps por status
         running_apps = [app for app in apps if getattr(app, 'status', None) and app.status.value == "running"]
         stopped_apps = [app for app in apps if getattr(app, 'status', None) and app.status.value != "running"]
         
@@ -98,8 +94,6 @@ class BotMessages:
         status = "sucesso" if exit_code == 0 else "falha"
         
         header = f"{success_icon} Execução de `{script_name}` - {status} (código: {exit_code})"
-        
-        # ✅ Limitar tamanho da output para evitar mensagens muito longas
         max_length = 3000
         
         if stdout:

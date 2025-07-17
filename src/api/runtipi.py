@@ -7,8 +7,6 @@ from enum import Enum
 from .cache import APICache
 
 logger = logging.getLogger(__name__)
-
-# ✅ Enums para melhor type safety
 class AppStatus(Enum):
     RUNNING = "running"
     STOPPED = "stopped"
@@ -17,8 +15,6 @@ class AppStatus(Enum):
 class AppAction(Enum):
     START = "start"
     STOP = "stop"
-
-# ✅ Dataclass para representar um app
 @dataclass
 class RuntipiApp:
     id: str
@@ -35,8 +31,6 @@ class RuntipiApp:
             status=AppStatus(data.get('status', 'unknown')),
             version=data.get('version')
         )
-
-# ✅ Classe para respostas da API
 @dataclass
 class APIResponse:
     success: bool
@@ -56,8 +50,6 @@ class RuntipiAPI:
         self._session = requests.Session()
         self._cache = APICache()
         self._is_authenticated = False
-        
-        # ✅ Endpoints configuráveis
         self._endpoints = {
             'auth': '/api/auth/login',
             'apps': '/api/apps/installed',
@@ -129,12 +121,8 @@ class RuntipiAPI:
         if not response.success:
             logger.error(f"Falha ao buscar apps: {response.error}")
             return []
-        
-        # ✅ Validação e parsing melhorados
         try:
             apps_data = response.data
-            
-            # Suporte para diferentes estruturas de resposta
             if isinstance(apps_data, dict):
                 if 'installed' in apps_data:
                     apps_list = apps_data['installed']
@@ -146,8 +134,6 @@ class RuntipiAPI:
             if not isinstance(apps_list, list):
                 logger.error(f"Resposta da API não é uma lista: {type(apps_list)}")
                 return []
-            
-            # ✅ Conversão para objetos tipados
             return [RuntipiApp.from_dict(app) for app in apps_list]
             
         except (KeyError, TypeError, ValueError) as e:
