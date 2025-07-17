@@ -1,11 +1,7 @@
 .PHONY: help build up down restart logs clean test lint format check-env health
-
-# Variáveis
 COMPOSE_FILE = docker-compose.yml
 CONTAINER_NAME = runtipi-telegram-runtipi
 IMAGE_NAME = runtipi-telegram-runtipi
-
-# Comando padrão
 help: ## Mostra esta mensagem de ajuda
 	@echo "🤖 Runtipi Telegram Bot - Comandos disponíveis:"
 	@echo ""
@@ -90,7 +86,5 @@ backup-logs: ## Faz backup dos logs
 dev: ## Modo desenvolvimento com rebuild automático
 	@echo "🔧 Modo desenvolvimento..."
 	docker-compose up --build
-
-# Debug e troubleshooting
 debug: ## Mostra informações de debug
 	@echo "🐛 Informações de debug:"

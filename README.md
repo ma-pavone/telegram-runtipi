@@ -1,10 +1,7 @@
-# Telegram Bot para Runtipi
 
 Um bot para Telegram que permite controlar e monitorar seus aplicativos Runtipi, além de executar scripts remotamente.
 
 ---
-
-## Funcionalidades
 
 - **Listar Apps**: Veja todos os aplicativos instalados e seu status (rodando/parado).
 - **Controlar Apps**: Inicie ou pare qualquer aplicativo com uma simples mensagem.
@@ -15,8 +12,6 @@ Um bot para Telegram que permite controlar e monitorar seus aplicativos Runtipi,
 
 ---
 
-## Comandos Disponíveis
-
 - `/start` ou `/help` - Mostra a mensagem de ajuda.
 - `/apps` - Lista todos os apps instalados com seus respectivos status.
 - `/status` - Mostra um resumo de quantos apps estão rodando e parados.
@@ -25,8 +20,6 @@ Um bot para Telegram que permite controlar e monitorar seus aplicativos Runtipi,
 - *Qualquer outra mensagem* (ex: `jellyfin`) - Tenta dar toggle (ligar/desligar) no app com aquele nome.
 
 ---
-
-## Instalação via Runtipi App Store
 
 1.  Adicione o repositório deste projeto à sua lista de App Stores customizadas no Runtipi.
 2.  Encontre "Telegram Runtipi Bot" na sua App Store e clique em "Instalar".

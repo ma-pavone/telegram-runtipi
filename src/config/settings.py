@@ -1,34 +1,34 @@
-# src/config/settings.py
 import os
-from dataclasses import dataclass
-import logging
+import dataclasses
+from dotenv import load_dotenv
+from typing import final
+load_dotenv()
 
-@dataclass
+@final
+@dataclasses.dataclass(frozen=True)
 class BotConfig:
+    """
+    Estrutura de dados imutável para armazenar as configurações da aplicação.
+    """
     telegram_token: str
-    allowed_chat_id: int
-    scripts_dir: str
-    runtipi_host: str
+    telegram_chat_id: int
     runtipi_username: str
     runtipi_password: str
+    scripts_path: str
 
     @classmethod
-    def from_env(cls):
-        return cls(
-            telegram_token=os.getenv('TELEGRAM_TOKEN'),
-            allowed_chat_id=int(os.getenv('TELEGRAM_CHAT_ID')),
-            scripts_dir=os.getenv('SCRIPTS_PATH', '/scripts'),
-            runtipi_host=os.getenv('RUNTIPI_HOST', 'http://localhost'),
-            runtipi_username=os.getenv('RUNTIPI_USERNAME'),
-            runtipi_password=os.getenv('RUNTIPI_PASSWORD')
-        )
-
-    def validate(self) -> bool:
-        """Valida se todas as configurações obrigatórias estão definidas"""
-        required_fields = [
-            self.telegram_token,
-            self.allowed_chat_id,
-            self.runtipi_username,
-            self.runtipi_password
-        ]
-        return all(required_fields)
+    def from_env(cls) -> 'BotConfig':
+        """
+        Cria uma instância de BotConfig a partir de variáveis de ambiente.
+        Levanta um ValueError se uma variável essencial estiver ausente ou inválida.
+        """
+        try:
+            return cls(
+                telegram_token=os.environ["TELEGRAM_TOKEN"],
+                telegram_chat_id=int(os.environ["TELEGRAM_CHAT_ID"]),
+                runtipi_username=os.environ["RUNTIPI_USERNAME"],
+                runtipi_password=os.environ["RUNTIPI_PASSWORD"],
+                scripts_path=os.getenv("SCRIPTS_PATH", "/scripts"),
+            )
+        except (KeyError, ValueError) as e:
+            raise ValueError(f"Variável de ambiente ausente ou com tipo inválido: {e}") from e

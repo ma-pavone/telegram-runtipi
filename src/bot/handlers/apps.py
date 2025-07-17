@@ -1,117 +1,57 @@
-# src/bot/handlers/apps.py
-import asyncio
 from telegram import Update
 from telegram.ext import ContextTypes
-from bot.middleware.auth import require_auth
-from bot.utils.messages import BotMessages
+from typing import final
+
 from api.runtipi import RuntipiAPI
-import logging
+from bot.utils.messages import BotMessages
 
-logger = logging.getLogger(__name__)
+@final
+class AppCommandHandler:
+    """Handlers para comandos relacionados a aplicativos Runtipi."""
+    
+    def __init__(self, runtipi_api: RuntipiAPI):
+        self._api = runtipi_api
 
-class AppsHandlers:
-    def __init__(self, allowed_chat_id: int, api: RuntipiAPI):
-        self.allowed_chat_id = allowed_chat_id
-        self.api = api
+    async def list_apps(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handler para o comando /apps."""
+        apps = self._api.get_installed_apps()
+        message = BotMessages.format_apps_list(apps)
+        await update.effective_chat.send_message(message, parse_mode='Markdown')
 
-    @property
-    def auth_required(self):
-        return require_auth(self.allowed_chat_id)
+    async def summary(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handler para o comando /status."""
+        apps = self._api.get_installed_apps()
+        message = BotMessages.format_status_summary(apps)
+        await update.effective_chat.send_message(message, parse_mode='Markdown')
 
-    async def apps_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Lista apps instalados com status"""
-        @self.auth_required
-        async def _apps_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            await update.message.reply_text("🔄 Obtendo lista de apps...")
-            
-            try:
-                apps_data = await asyncio.to_thread(self.api.get_installed_apps)
-                message = BotMessages.format_apps_list(apps_data)
-                await update.message.reply_text(message, parse_mode='Markdown')
-                
-            except Exception as e:
-                logger.error(f"Erro no comando apps: {e}")
-                await update.message.reply_text("❌ Erro interno ao obter apps")
+    async def toggle_app(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handler para mensagens de texto para ligar/desligar apps."""
+        app_id = update.message.text.strip().lower()
+        apps = self._api.get_installed_apps()
+        
+        target_app = next((app for app in apps if app.get('id') == app_id), None)
 
-        await _apps_handler(update, context)
+        if not target_app:
+            await update.effective_chat.send_message(f"Aplicativo `{app_id}` não encontrado.", parse_mode='Markdown')
+            return
 
-    async def status_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Status resumido dos apps"""
-        @self.auth_required
-        async def _status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            await update.message.reply_text("🔄 Verificando status...")
-            
-            try:
-                apps_data = await asyncio.to_thread(self.api.get_installed_apps)
-                message = BotMessages.format_status_summary(apps_data)
-                await update.message.reply_text(message, parse_mode='Markdown')
-                
-            except Exception as e:
-                logger.error(f"Erro no comando status: {e}")
-                await update.message.reply_text("❌ Erro interno ao obter status")
-
-        await _status_handler(update, context)
-
-    async def toggle_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handler para toggle de apps via mensagem de texto"""
-        @self.auth_required
-        async def _toggle_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            app_id = update.message.text.strip().lower()
-            
-            # Validação básica do nome do app
-            if not app_id or len(app_id) > 50 or ' ' in app_id:
-                await update.message.reply_text(
-                    "⚠️ Digite apenas o nome técnico do app\n"
-                    "Exemplo: `jellyfin`, `sonarr`, `radarr`",
-                    parse_mode='Markdown'
-                )
-                return
-
-            await update.message.reply_text(
-                f"🔄 Processando toggle para `{app_id}`...", 
+        current_status = target_app.get('status', 'unknown')
+        action_verb = "desligando" if current_status == "running" else "ligando"
+        
+        try:
+            await update.effective_chat.send_message(f"Ok, {action_verb} `{app_id}`...")
+            self._api.toggle_app_action(app_id, current_status)
+            new_status_icon = BotMessages.STATUS_ICON_OFF if current_status == "running" else BotMessages.STATUS_ICON_OK
+            await context.bot.edit_message_text(
+                chat_id=update.effective_chat.id,
+                message_id=update.message.message_id + 1,
+                text=f"{new_status_icon} Aplicativo `{app_id}` foi {action_verb.replace('ando', 'ado')} com sucesso!",
                 parse_mode='Markdown'
             )
-            
-            try:
-                # Verifica se o app existe e obtém status atual
-                current_status = await asyncio.to_thread(self.api.get_app_status, app_id)
-                
-                if not current_status:
-                    await update.message.reply_text(
-                        f"❌ App `{app_id}` não encontrado", 
-                        parse_mode='Markdown'
-                    )
-                    return
-
-                # Determina a ação baseada no status atual
-                action = "stop" if current_status == "running" else "start"
-                action_text = "parado" if action == "stop" else "iniciado"
-                
-                await update.message.reply_text(
-                    f"⚡ {action_text.capitalize()} `{app_id}`...", 
-                    parse_mode='Markdown'
-                )
-                
-                # Executa a ação
-                success = await asyncio.to_thread(self.api.toggle_app_action, app_id, action)
-                
-                if success:
-                    status_emoji = "🔴" if action == "stop" else "🟢"
-                    await update.message.reply_text(
-                        f"{status_emoji} App `{app_id}` {action_text}",
-                        parse_mode='Markdown'
-                    )
-                else:
-                    await update.message.reply_text(
-                        f"❌ Falha ao {action_text.replace('o', 'ar')} o app `{app_id}`",
-                        parse_mode='Markdown'
-                    )
-                    
-            except Exception as e:
-                logger.error(f"Erro no toggle do app {app_id}: {e}")
-                await update.message.reply_text(
-                    f"❌ Erro interno ao processar `{app_id}`", 
-                    parse_mode='Markdown'
-                )
-
-        await _toggle_handler(update, context)
+        except Exception as e:
+            await context.bot.edit_message_text(
+                chat_id=update.effective_chat.id,
+                message_id=update.message.message_id + 1,
+                text=f"Falha ao interagir com o app `{app_id}`: {e}",
+                parse_mode='Markdown'
+            )

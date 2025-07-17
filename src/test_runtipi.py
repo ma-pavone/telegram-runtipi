@@ -1,13 +1,9 @@
-#!/usr/bin/env python3
-# test_runtipi.py - Script para testar a API do Runtipi
 
 import os
 import sys
 import logging
 from pathlib import Path
 from api.runtipi import RuntipiAPI
-
-# Configurar logging para debug
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -15,8 +11,6 @@ logging.basicConfig(
 
 def test_runtipi_api():
     """Testa a API do Runtipi"""
-    
-    # Configurações (ajuste conforme necessário)
     RUNTIPI_HOST = os.getenv('RUNTIPI_HOST')
     USERNAME = os.getenv('RUNTIPI_USERNAME')
     PASSWORD = os.getenv('RUNTIPI_PASSWORD')
@@ -24,23 +18,17 @@ def test_runtipi_api():
     print(f"🔧 Testando conexão com Runtipi em: {RUNTIPI_HOST}")
     print(f"👤 Usuário: {USERNAME}")
     print("-" * 50)
-    
-    # Inicializa a API
     api = RuntipiAPI(
         host=RUNTIPI_HOST,
         username=USERNAME,
         password=PASSWORD
     )
-    
-    # Teste 1: Conexão básica
     print("🧪 Teste 1: Testando conexão e autenticação...")
     if api.test_connection():
         print("✅ Conexão OK")
     else:
         print("❌ Falha na conexão")
         return False
-    
-    # Teste 2: Listar apps instalados
     print("\n🧪 Teste 2: Listando apps instalados...")
     apps_data = api.get_installed_apps()
     
