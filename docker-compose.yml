@@ -1,6 +1,6 @@
 services:
   telegram-runtipi:
-    image: maoppenheim/telegram-runtipi
+    image: maoppenheim/telegram-runtipi:0.0.1
     build: .
     container_name: telegram-runtipi
     restart: unless-stopped
@@ -8,27 +8,15 @@ services:
       - .env
     volumes:
       - ${SCRIPTS_PATH}:/scripts:ro
-      # - ${HOME}/runtipi/logs:/app/logs
-
+      # (Opcional) Mapeie um volume para logs persistentes se usar o FileHandler.
+      # - ./logs:/app/logs
     networks:
       - runtipi_tipi_main_network
-    ports:
-      - "7777:7777"
-    security_opt:
-      - no-new-privileges:true
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.1'
-          memory: 64M
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "3"
+        max-file: "2"
         labels: "service=telegram-runtipi"
 
 networks:

@@ -3,7 +3,7 @@
     {
       "name": "telegram-runtipi",
       "isMain": true,
-      "image": "SEU_USUARIO_DOCKERHUB/telegram-runtipi-bot:latest",
+      "image": "maoppenheim/telegram-runtipi:0.0.1",
       "internalPort": 7777,
       "security_opt": [
         "no-new-privileges:true"
