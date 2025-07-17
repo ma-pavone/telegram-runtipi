@@ -10,4 +10,4 @@ WORKDIR /app
 COPY --from=builder /root/.local /root/.local
 COPY src ./src
 ENV PATH=/root/.local/bin:$PATH
-CMD ["python", "src/app.py"]
+CMD ["python", "-m", "src.app"]

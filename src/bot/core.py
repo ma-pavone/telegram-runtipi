@@ -5,6 +5,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from config.settings import BotConfig
 from api.runtipi import RuntipiAPI
 from bot.handlers import BasicHandlers, AppsHandlers, ScriptsHandlers
+from health.server import HealthServer
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,7 @@ class RuntipiBot:
             username=config.runtipi_username,
             password=config.runtipi_password
         )
+        self.health_server = HealthServer(self.api, port=7777)
         self.application = Application.builder().token(config.telegram_token).build()
 
     def _setup_handlers(self):
@@ -50,6 +52,26 @@ class RuntipiBot:
             return True
         logger.error("❌ Failed to connect to Runtipi API.")
         return False
+
+    async def run_async(self):
+        """Executa o bot e os serviços auxiliares."""
+        if not await self._test_api_connection():
+            return False
+
+        try:
+            await self.health_server.start()
+            logger.info("🚀 Bot is polling for updates...")
+            await self.application.run_polling(drop_pending_updates=True)
+            return True
+        except (KeyboardInterrupt, SystemExit):
+            logger.info("🛑 Shutdown signal received.")
+            return True
+        except Exception as e:
+            logger.critical(f"❌ Critical error in bot execution: {e}", exc_info=True)
+            return False
+        finally:
+            await self.health_server.stop()
+            logger.info("👋 Bot has been shut down.")
 
     def run(self) -> bool:
         """Ponto de entrada síncrono para executar o bot."""
