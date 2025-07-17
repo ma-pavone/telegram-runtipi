@@ -10,4 +10,5 @@ WORKDIR /app
 COPY --from=builder /root/.local /root/.local
 COPY src ./src
 ENV PATH=/root/.local/bin:$PATH
+EXPOSE 7777
 CMD ["python", "-m", "src.app"]
